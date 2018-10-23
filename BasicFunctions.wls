@@ -14,12 +14,39 @@ BeginPackage["BasicFunctions`"];
 
 USolve::usage="Solve for Time evolution operator given Hamiltonian";
 DensityMatrix::usage="Outputs density matrix given a wave function(Pure State for now)";
+DensityMatrixQ::usage="Returns true if input is a density matrix";
+WaveFunction::usage="Creates a wave function from phase and azimuthal angle.";
+BlochVector::usage="Creates the Bloch vector for a Density matrix";
+EvolveDensityMatrix::usage="Evaluates the inputed density matrix by the inpute time evolution operator.";
+BlochPlot::usage="Creates a plot of the bloch vector for the given density matrix under given time evolution operator.";
+RandomDensityMatrix::usage="Generates a random density matrix.";
+PureStateQ::usage="Outputs true if a given density matrix represents a pure state.";
+BlochListPlot::usage="Plots a list of points on the bloch sphere given a list of density matricies.";
+SquarePulseHamiltonian::usage="Generates the hamiltonian of a square pulse.";
+SquarePulseSoln::usage="Numerically solves the hamiltonian for a given square pulse.";
+TransitionProbibility::usage="Calculates the probability of a transition between two states."
+HGate::usage="";
+SGate::usage="";
+TGate::usage="";
 
 
 Begin["`Private`"];
 
 
 \[HBar]=1;
+(* Common Gates *)
+HGate[t_]:=1/Sqrt[2] ({
+ {1, 1},
+ {1, -1}
+});
+SGate[t_]:=({
+ {1, 0},
+ {0, I}
+});
+TGate[t_]:=({
+ {1, 0},
+ {0, Exp[I Pi/4]}
+});
 
 (* How to approximately check PositiveSemidefinite *)
 DensityMatrixQ[A_?SquareMatrixQ]:=Block[{},(Tr[A]==1)&&(PositiveSemidefiniteMatrixQ[A])&&(HermitianMatrixQ[A])];
@@ -34,7 +61,6 @@ USolve[Ham_,UInit_,tMin_?NumericQ,tMax_?NumericQ,\[HBar]_?NumericQ,opts___]:=
         intdF=USol/.NDSolve[{I \[HBar] USol'[tSol]==Ham[tSol].USol[tSol],USol[tMin]==UInit},USol,{tSol,tMin,tMax},opts]//First;
         Function[{t},intdF[t]//Evaluate]
     ];
-    
     
 DensityMatrix[\[Psi]_]:=\[Psi].ConjugateTranspose[\[Psi]];
 
@@ -63,11 +89,9 @@ SquarePulseHamiltonian[\[Tau]_,\[CapitalOmega]_,\[Omega]_,E0_,E1_,t_]:=Block[{H0
 
 SquarePulseSoln[\[Tau]_?NumericQ,\[CapitalOmega]_?NumericQ,\[Omega]_?NumericQ,E0_?NumericQ,E1_?NumericQ]:=Block[{H},
 H[t_]:=SquarePulseHamiltonian[\[Tau],\[CapitalOmega],\[Omega],E0,E1,t];
-USolve[H,IdentityMatrix[2],0,10,\[HBar]]];
+USolve[H,IdentityMatrix[2],0,20,\[HBar]]];
 
 TransitionProbibility[t_,U_,i_,j_]:=Abs[U[t][[i,j]]]^2;
-
-(* Set up git *)
 
 
 
