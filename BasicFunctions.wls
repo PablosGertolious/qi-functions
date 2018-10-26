@@ -49,11 +49,11 @@ TGate[t_]:=({
 });
 
 (* How to approximately check PositiveSemidefinite *)
-DensityMatrixQ[A_?SquareMatrixQ]:=Block[{},(Tr[A]==1)&&(PositiveSemidefiniteMatrixQ[A])&&(HermitianMatrixQ[A])];
+DensityMatrixQ[A_?SquareMatrixQ]:=Block[{\[Epsilon]=10^(-4)},(1-\[Epsilon]<Tr[A]<1+\[Epsilon])&&(PositiveSemidefiniteMatrixQ[A])&&(HermitianMatrixQ[A])];
 
 WaveFunction::imaginaryMessage="Non-trivial imaginary part";
 WaveFunction[\[Theta]_,\[Phi]_]:=Block[{},
-If[ Im[\[Theta]]>10^(-6)||  Im[\[Phi]]>10^(-6),Message[\[Psi]::imaginaryMessage]];
+If[ Im[\[Theta]]>10^(-6)||  Im[\[Phi]]>10^(-6),Message[WaveFunction::imaginaryMessage]];
 Cos[\[Theta]/2]{{1},{0}}+Sin[\[Theta]/2]Exp[I \[Phi]]{{0},{1}}];
 
 USolve[Ham_,UInit_,tMin_?NumericQ,tMax_?NumericQ,\[HBar]_?NumericQ,opts___]:=
@@ -64,19 +64,18 @@ USolve[Ham_,UInit_,tMin_?NumericQ,tMax_?NumericQ,\[HBar]_?NumericQ,opts___]:=
     
 DensityMatrix[\[Psi]_]:=\[Psi].ConjugateTranspose[\[Psi]];
 
-BlochVector[\[Rho]_]:={
+BlochVector[\[Rho]_?DensityMatrixQ]:={
  \[Rho][[2,1]]+\[Rho][[1,2]],(\[Rho][[2,1]]-\[Rho][[1,2]])/I,2\[Rho][[1,1]]-1
 }//Chop;
 
-(* Loss of Precision *)
 EvolveDensityMatrix[\[Rho]_?DensityMatrixQ,U_,t_]:=U[t].\[Rho].ConjugateTranspose[U[t]]//Chop;
 
 BlochPlot[\[Rho]_?DensityMatrixQ,U_,tMin_,tMax_]:=Block[{a},
 a[t_]:=BlochVector[EvolveDensityMatrix[\[Rho],U,t]];
 Show[SphericalPlot3D[1,{\[Theta],0,Pi},{\[Phi],0,2Pi},PlotStyle->{Opacity[.2],Gray},MeshStyle->{Opacity[.1]}],ParametricPlot3D[{a[t][[1]],a[t][[2]],a[t][[3]]},{t,tMin,tMax},PlotStyle->{Thick,Red}]]];
 
-RandomDensityMatrix[dim_]:=Block[{m=RandomComplex[{-1-I,1+I},{dim,dim}],h=(m+ConjugateTranspose[m])/2},
- h.ConjugateTranspose[h]/Tr[h.ConjugateTranspose[h]]
+RandomDensityMatrix[dim_]:=Block[{m=RandomComplex[{-1-I,1+I},{dim,dim}],h=(m+ConjugateTranspose[m])/2,\[Rho]},
+ \[Rho]=h.ConjugateTranspose[h]/Tr[h.ConjugateTranspose[h]]
  ];
 
 PureStateQ[\[Rho]_?DensityMatrixQ]:=\[Rho]==\[Rho].\[Rho];
