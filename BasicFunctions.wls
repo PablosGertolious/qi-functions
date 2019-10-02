@@ -28,6 +28,9 @@ TransitionProbibility::usage="Calculates the probability of a transition between
 HGate::usage="";
 SGate::usage="";
 TGate::usage="";
+Fidelity::usage = "Determines the fidelity of a propagator U from the intended propagator \!\(\*SubscriptBox[\(U\), \(0\)]\)";
+SuperDagger::usage = "Used as the Conjugate transpose opperator.";
+CircleTimes::usage = "Used as the Kronecker Product of matrices.";
 
 
 Begin["`Private`"];
@@ -91,7 +94,18 @@ H[t_]:=SquarePulseHamiltonian[\[Tau],\[CapitalOmega],\[Omega],E0,E1,t];
 USolve[H,IdentityMatrix[2],0,20,\[HBar]]];
 
 TransitionProbibility[t_,U_,i_,j_]:=Abs[U[t][[i,j]]]^2;
+(*Written by George Barron*)
+Fidelity::imaginarypart = "The fidelity has an imaginary component above the specified precision"
+Fidelity[UActual_,UIntended_]/;And@@SquareMatrixQ/@{UActual,UIntended}:=Block[
+{n=Length[UActual],M=UIntended.ConjugateTranspose[UActual],fid},
+fid=1/(n(n+1)) (Tr[M.ConjugateTranspose[M]]+Abs[Tr[M]]^2);
+If[Chop[Im[fid]]>0,Message[Fidelity::imaginarypart]];
+Chop[fid]
+];
 
+
+SuperDagger[v_]:=ConjugateTranspose[v];
+CircleTimes[args__]:=KroneckerProduct[args]
 
 
 (* ::Section:: *)
